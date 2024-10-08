@@ -19,8 +19,12 @@ jobs:
         java-version: '11'  # Specify the JDK version you need
         distribution: 'adopt'  # You can also use 'temurin', 'zulu', etc.
 
-    - name: Install dependencies (if you have any)
-      run: npm install  # If you have a package.json file
+    - name: Change to frontend directory
+      run: cd frontend  # Change to the directory containing package.json
+
+    - name: Install dependencies
+      run: npm install
+      working-directory: frontend  # Ensure npm runs in the correct directory
 
     - name: Run SonarQube Analysis
       env:
