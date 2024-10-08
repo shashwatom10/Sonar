@@ -1,0 +1,42 @@
+name: Deploy to S3 and SonarQube Analysis
+
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow on pushes to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js (optional)
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'  # You can specify the Node.js version if needed
+
+    - name: Install dependencies (if you have any)
+      run: npm install  # If you have a package.json file
+
+    - name: Run SonarQube Analysis
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}        # SonarQube token
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}  # SonarQube server URL
+      run: |
+        curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
+        unzip sonar-scanner.zip -d sonar-scanner
+        ./sonar-scanner/sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner -Dproject.settings=sonar-project.properties
+
+    - name: Deploy to S3
+      uses: jakejarvis/s3-sync-action@master
+      with:
+        args: --acl public-read --follow-symlinks --delete
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}      # AWS Access Key
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS Secret Access Key
+        BUCKET: your-bucket-name                                    # Your S3 bucket name
+        SOURCE_DIR: .                                               # Source directory
+
